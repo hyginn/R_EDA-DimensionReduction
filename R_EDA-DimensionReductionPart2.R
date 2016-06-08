@@ -3,6 +3,29 @@
 # Dimension Reduction - Part 2 (continued from yesterday)
 #
 
+# ======== Recreate data =======================================================
+
+library(MASS)
+data(crabs)
+
+cho.data <- read.table("Logcho_237_4class.txt", skip=1)[, 3:19]
+for (i in 1:nrow(cho.data)) {
+    cho.data[i,] <- cho.data[i,] - mean(as.numeric(cho.data[i,]))
+}
+normDat <- function(x) {
+    # input: a column from a dataframe
+    x <- as.numeric(x)
+    norm <- x - mean(x)       # subtract means
+    norm <- norm / sd(norm)   # scale SD to 1
+    return(norm)
+}
+for (i in 1:ncol(cho.data)) {
+    cho.data[ ,i] <- normDat(cho.data[ ,i])
+}
+names(cho.data) <- paste("t", 1:17, sep="")
+pcaCho <- prcomp(cho.data)
+# ==============================================================================
+
 # define a way to identify gene names
 choGenes <- as.character(read.table("logcho_237_4class.txt", skip=1)[, 1])
 head(choGenes)

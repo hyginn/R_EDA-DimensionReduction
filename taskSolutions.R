@@ -85,4 +85,38 @@ plotCrabs(pcaCrabs$x[,2], pcaCrabs$x[,3],
           xlab = "PC2",
           ylab = "PC3")
 
+# ==== systematic to standard gene name conversion ======
+#
+head(choGenes)
+# Goal: vector of 237 standard names
+#    use http://www.uniprot.org/docs/yeast.txt
+#    edit the file into csv format
+csvRaw <- read.csv("yeast.csv", header = FALSE, stringsAsFactors = FALSE)
+
+"YAL040c"
+std <- csvRaw[csvRaw[ , "V2"] == toupper("YAL040c"), "V1"]
+strsplit(std, ";")[[1]][1]
+
+test <- choGenes[sample(1:237, 5)]
+
+choStandard <- character(length(choGenes))
+for (i in 1:length(choGenes)) {
+    syst <- choGenes[i]
+    std <- csvRaw[csvRaw[ , "V2"] == toupper(syst), "V1"]
+    if (length(std) == 1) {
+        choStandard[i] <- strsplit(std, ";")[[1]][1]
+    } else {
+        choStandard[i] <- toupper(syst)
+    }
+}
+
+
+# shuffling data
+
+a <- letters[1:6]
+a
+sample(a)
+
+
+
 

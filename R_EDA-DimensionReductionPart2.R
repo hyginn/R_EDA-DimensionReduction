@@ -7,6 +7,8 @@
 
 library(MASS)
 data(crabs)
+pcaCrabs <- prcomp(crabs[, 4:8])
+
 
 cho.data <- read.table("Logcho_237_4class.txt", skip=1)[, 3:19]
 for (i in 1:nrow(cho.data)) {
@@ -32,7 +34,7 @@ head(choGenes)
 
 listGenes <- function(x) {
     for (i in 1:length(x)) {
-        cat(sprintf("%d: %s\n", i, choGenes[i]))
+        cat(sprintf("%d:\t%s\t%s\n", x[i], choGenes[x[i]], choStandard[x[i]]))
     }
 }
 
@@ -283,8 +285,8 @@ for (i in 1:length(sel3)) {
 
 plot(CorTwo, CorHalf, type="n")
 text(CorTwo, CorHalf)
-points(CorTwo[sel3], CorHalf[sel3], pch=19, col="firebrick", cex=2)
-points(CorTwo[sel1], CorHalf[sel1], pch=19, col="salmon", cex=2)
+points(CorTwo[sel1], CorHalf[sel1], pch=19, col="firebrick", cex=2)
+points(CorTwo[sel3], CorHalf[sel3], pch=19, col="salmon", cex=2)
 
 
 

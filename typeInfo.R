@@ -1,7 +1,7 @@
 # typeInfo.R
 #
 # Purpose:  information about an R object
-##
+#
 # ==============================================================================
 
 typeInfo <- function(x) {

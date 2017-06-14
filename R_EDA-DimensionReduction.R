@@ -5,10 +5,11 @@
 #
 # Date:    2017  06  01
 # Author:  Boris Steipe (boris.steipe@utoronto.ca)
-##         Some prior contributions by:
+#
+#          Some prior contributions by:
 #          Raphael Gottardo, FHCRC
 #          Sohrab Shah, UBC
-
+#
 # V 1.1    2017 updates
 # V 1.0    First code 2016
 #
@@ -39,17 +40,35 @@
 #  Open it, you can place all of your code-experiments and notes into that
 #  file. This will be your "Lab Journal" for this session.
 #
-# ====================================================================
+# ==============================================================================
 #
 # Module 3: Dimension Reduction
 #
-# ====================================================================
+# ==============================================================================
+ 
+#TOC> ==========================================================================
+#TOC> 
+#TOC>   Section  Title                                              Line
+#TOC> ------------------------------------------------------------------
+#TOC>   1        PCA introduction                                     70
+#TOC>   2        EDA with PCA                                        131
+#TOC>   2.1      The relative importance of PCs                      134
+#TOC>   2.1.1    Task: identify categories of elements in a plot     192
+#TOC>   3        EDA with PCA                                        229
+#TOC>   3.1      Load cell-cycle expression profiles                 235
+#TOC>   3.2      Explore the principal components                    277
+#TOC>   3.3      Explore some similar genes                          329
+#TOC>   4        Exploring data relative to models                   386
+#TOC>   5        t-SNE                                               478
+#TOC> 
+#TOC> ==========================================================================
+ 
 
 
 
-# =============================================
-# PCA introduction
-# =============================================
+# ==============================================================================
+# =    1  PCA introduction  ====================================================
+# ==============================================================================
 
 # Synthetic data example
 # 500 normally distributed samples each: uncorrelated
@@ -76,6 +95,7 @@ hist(x1)
 hist(y2)
 plot(x1, y1)
 plot(x1, y2)
+
 par(oPar) # restore graphics state parameters
 
 
@@ -107,10 +127,11 @@ typeInfo(pcaSample)
 
 ?prcomp
 
-# ==================================================
-# EDA with PCA
-# The relative importance of PCs
-# ==================================================
+# ==============================================================================
+# =    2  EDA with PCA  ========================================================
+# ==============================================================================
+
+# ==   2.1  The relative importance of PCs  ====================================
 
 # load one of the sample data sets in the R distribution
 
@@ -167,67 +188,51 @@ legend(-14.8, 16.2,
        box.col=1,
        bg="lightgrey")
 
-# ===================================================
+
+# ===  2.1.1  Task: identify categories of elements in a plot
+
 # Task: plot the last plot (without vectors) with plotting
 # symbols that correspond to the gender and type of crab:
 # orange and blue circles for females and triangles for males.
 
 # Advanced: also make symbol-size depend on carapace length or
 # the mean of all five measurements.
-# ===================================================
 
+# A pedestrian (but simple) solution
 plot(pcaCrabs$x[,2], pcaCrabs$x[,2], type ="n")
-points(pcaCrabs$x[  1: 50,2], pcaCrabs$x[  1: 50,3], pch=17, col="blue")
-points(pcaCrabs$x[ 51:100,2], pcaCrabs$x[ 51:100,3], pch=19, col="blue")
-points(pcaCrabs$x[101:150,2], pcaCrabs$x[101:150,3], pch=17, col="orange")
-points(pcaCrabs$x[151:200,2], pcaCrabs$x[151:200,3], pch=19, col="orange")
+points(pcaCrabs$x[  1: 50, 2], pcaCrabs$x[  1: 50, 3], pch=17, col="blue")
+points(pcaCrabs$x[ 51:100, 2], pcaCrabs$x[ 51:100, 3], pch=19, col="blue")
+points(pcaCrabs$x[101:150, 2], pcaCrabs$x[101:150, 3], pch=17, col="orange")
+points(pcaCrabs$x[151:200, 2], pcaCrabs$x[151:200, 3], pch=19, col="orange")
 
 
-# My solution.
-# 1. Create only the plotting frame
+# Dimension Reduction - Part 2 (second day)
+#
 
-crabPoints <- function(n) {
-    if (crabs[n,"sp"] == "B") {
-        sp = "#0066FF"
-    } else {
-        sp = "#FF9900"
-    }
-    if (crabs[n,"sex"] == "M") {
-        sex = 24  # triangle
-    } else {
-        sex = 21  # circle
-    }
-    points(pcaCrabs$x[n,2],
-           pcaCrabs$x[n,3],
-           col = sp, bg = sp,
-           pch = sex,
-           cex = scalePC(pcaCrabs$x[n,1]))
-}
+# ======== Recreate data =======================================================
 
-# scale by first PC
-scalePC <- function(x) {
-    x <- x +30
-    x <- (x / 55) * 2.5
-    x <- x + 0.5
-    return(x)
-}
+library(MASS)
+data(crabs)
+pcaCrabs <- prcomp(crabs[, 4:8])
 
-plot(pcaCrabs$x[,2], pcaCrabs$x[,3], type = "n")
+# Study the code in crabsPlot.R for a more advanced solution
+
+source("crabsPlot.R")
+crabsPlot(pcaCrabs$x[,2], pcaCrabs$x[,3],
+          crabs[ ,1], crabs[ ,2], pcaCrabs$x[ ,1],
+          main = "Principal components 2 and 3 distinguish crabs",
+          xlab = "PC2",
+          ylab = "PC3")
 
 
-for (i in 1:nrow(crabs)) {
-    crabPoints(i)
-}
-summary(pcaCrabs$x[,1])
+# ==============================================================================
+# =    3  EDA with PCA  ========================================================
+# ==============================================================================
 
-
-plot(pcaCrabs$x[,1:5])
-
-
-# ==================================================
-# EDA with PCA
 # Exploring the structure of datasets
 # ==================================================
+
+# ==   3.1  Load cell-cycle expression profiles  ===============================
 
 # Load the Raymond Cho dataset of expression profiles
 # containing 237 genes known or suspected to be involved
@@ -244,49 +249,46 @@ boxplot(cho.data)
 # in a cycle, we are less interested in the
 # absolute values of expression, and more in
 # whether values change in a cyclical fashion.
-# As a first step to normalize the data, we can
-# therefore subtract the row-mean from each row.
-
-for (i in 1:nrow(cho.data)) {
-    cho.data[i,] <- cho.data[i,] - mean(as.numeric(cho.data[i,]))
-}
-
+# Therefor we scale all rows to mean 0 and
+# sd 1. Scale works on columns - to scale
+# rows we use t() to transpose ...
+x <- t(cho.data)
+x <- scale(x)
+cho.data <- as.data.frame(t(x))
 boxplot(cho.data)
 
-# This has caused the averages and ranges to become quite
-# divergent between experiments. We should normalize them
-# so as to make sure every experiment (dimension)
-# contributes equally to our principal component analysis.
-
-# Let's create a function to normalize the data.
-
-normDat <- function(x) {
-    # input: a column from a dataframe
-    x <- as.numeric(x)
-    norm <- x - mean(x)       # subtract means
-    norm <- norm / sd(norm)   # scale SD to 1
-    return(norm)
-}
-
-for (i in 1:ncol(cho.data)) {
-    cho.data[ ,i] <- normDat(cho.data[ ,i])
-}
-
-boxplot(cho.data)
 # Change the column names
-names(cho.data) <- paste("t", 1:17, sep="")
+colnames(cho.data) <- paste("t", 1:17, sep="")
 head(cho.data)
 
+
+# Plot some expression profiles
+set.seed(112358)
+Sel <- sample(1:nrow(cho.data), 10)
+
+matplot(t(cho.data[Sel, ]),
+        type="b", lwd=2, col=cm.colors(10),
+        main = "Random selection",
+        ylab = "Scaled expression levels",
+        xlab = "Timepoints")
+
+
+
+# ==   3.2  Explore the principal components  ==================================
+
+# calculate the PCS
 pcaCho <- prcomp(cho.data)
 plot(pcaCho, n=17)
 
 # Compare the PCs to PCs from a matrix of random numbers
 # ... eg as follows:
-rU = matrix(runif(17 * 237,0,3), nrow = 237, ncol=17)
+rU = matrix(runif(17 * 237, 0, 3), nrow = 237, ncol=17)
 plot(prcomp(rU), n=17, ylim = c(0, 3))
+
 
 # Exercise: compare the PCs to a matrix of permuted
 # observations.
+
 
 # Explore the correlations along the first few principal components
 
@@ -302,66 +304,42 @@ par(oPar)
 # plot for the seventeen dimensions. In microarray analysis we call
 # these the "eigengenes", with reference to the "eigenvalues" of
 # linear algebra.
-matplot(pcaCho$rotation[, 1:3],
+N <- 4
+matplot(pcaCho$rotation[, 1:N],
         type="b", lwd=3,
         xlab = "timepoint", ylab="PCs")
 
-legend(x = "topright", inset = 0.02,
-       legend = c("PC1", "PC2", "PC3"), cex = 0.8,
-       text.width = 1,
-       bg = "#EEEEEE",
-       seg.len = 5, col = 1:3, lty = 1:3, lwd = 2,
-       pch = as.character(1:3))
 
-
-# Dimension Reduction - Part 2 (second day)
-#
-
-# ======== Recreate data =======================================================
-
-library(MASS)
-data(crabs)
-pcaCrabs <- prcomp(crabs[, 4:8])
-
-
-cho.data <- read.table("Logcho_237_4class.txt", skip=1)[, 3:19]
-for (i in 1:nrow(cho.data)) {
-    cho.data[i,] <- cho.data[i,] - mean(as.numeric(cho.data[i,]))
-}
-normDat <- function(x) {
-    # input: a column from a dataframe
-    x <- as.numeric(x)
-    norm <- x - mean(x)       # subtract means
-    norm <- norm / sd(norm)   # scale SD to 1
-    return(norm)
-}
-for (i in 1:ncol(cho.data)) {
-    cho.data[ ,i] <- normDat(cho.data[ ,i])
-}
-names(cho.data) <- paste("t", 1:17, sep="")
-pcaCho <- prcomp(cho.data)
-# ==============================================================================
-
-# define a way to identify gene names
+# Define a way to fetch the actual gene names:
+# A: read the gene names for the original data
 choGenes <- as.character(read.table("logcho_237_4class.txt", skip=1)[, 1])
 head(choGenes)
 
+# B: define a function to list gene names for row numbers
 listGenes <- function(x) {
     for (i in 1:length(x)) {
-        cat(sprintf("%d:\t%s\t%s\n", x[i], choGenes[x[i]], choStandard[x[i]]))
+        cat(sprintf("%d:\t%s\n", x[i], choGenes[x[i]] ))
     }
 }
 
+# C: try it
+listGenes(c(1,2,3,5,8))
 
-plot(pcaCho$x[ , 1], pcaCho$x[ , 2], type = "n")
-text(pcaCho$x[ , 1], pcaCho$x[ , 2], cex = 0.7)
 
-Sel1 <- c(193, 142, 235, 98, 73, 54, 114)
-text(pcaCho$x[Sel1, 1], pcaCho$x[Sel1, 2], labels = Sel1, col="red", cex = 0.7)
+# ==   3.3  Explore some similar genes  ========================================
+
+plot(pcaCho$x[ , 2], pcaCho$x[ , 3], type = "n")
+text(pcaCho$x[ , 2], pcaCho$x[ , 3], cex = 0.7)
+
+
+
+Sel1 <- c(104, 72, 86, 148, 186, 71)
+text(pcaCho$x[Sel1, 2], pcaCho$x[Sel1, 3], labels = Sel1, col="red", cex = 0.7)
 
 matplot(t(cho.data[Sel1, ]),
-        type="b", lwd=3, col="3",
-        ylab="Clustered genes",
+        type = "b", lwd = 3, col = "seagreen",
+        main = "Clustered Genes - Set 1",
+        ylab = "Scaled expression levels",
         xlab = "Timepoints")
 
 listGenes(Sel1)
@@ -371,8 +349,9 @@ listGenes(Sel1)
 SelRand <- sample(1:237, 10)
 
 matplot(t(cho.data[SelRand, ]),
-        type="b", lwd=3, col="maroon",
-        ylab="Random genes",
+        type = "b", lwd = 3, col = "maroon",
+        main = "Random genes",
+        ylab = "Scaled expression levels",
         xlab = "Timepoints")
 
 
@@ -384,40 +363,29 @@ matplot(t(cho.data[SelRand, ]),
 
 plot(pcaCho$x[ , 1], pcaCho$x[ , 3], type = "n")
 text(pcaCho$x[ , 1], pcaCho$x[ , 3], cex = 0.7)
-text(pcaCho$x[Sel1, 1], pcaCho$x[Sel1, 3], labels = Sel1, col="skyblue", cex = 0.7)
+text(pcaCho$x[Sel1, 1], pcaCho$x[Sel1, 3], labels = Sel1, col="seagreen", cex = 0.7)
 
 
-Sel2 <- c(20, 227, 143, 128, 192, 75)
+Sel2 <- c(98, 205, 126, 127, 102, 236)
 text(pcaCho$x[Sel2, 1], pcaCho$x[Sel2, 3], labels = Sel2, col="firebrick", cex = 0.7)
 
-matplot(t(cho.data[Sel1, ]),
-        type="b", lwd=3, col="skyblue",
-        ylab="normalized expression",
-        xlab = "Timepoint",
-        ylim = c(-4, 4))
+matplot(t(cho.data[Sel2, ]),
+        type = "b", lwd = 3, col = "firebrick",
+        main = "Clustered Genes - Set 2",
+        ylab = "Scaled expression levels",
+        xlab = "Timepoints")
 
-listGenes(Sel1)
+listGenes(Sel2)
 
 # TASK: (collaborative)
 #    A list of systematic genes is not that informative.
 #    In EDA, you aim to get a "feeling" for your data.
 #    Improve the gene listing to get the common names.
 
-oPar <- par(new=TRUE)
-matplot(t(cho.data[Sel2, ]),
-        type="b", lwd=3, col="firebrick",
-        ylab="",
-        xlab="",
-        ylim = c(-4, 4))
-par(oPar)
+# ==============================================================================
+# =    4  Exploring data relative to models  ===================================
+# ==============================================================================
 
-listGenes(Sel2)
-
-
-# ==================================================
-# Exploring the structure of datasets
-# relative to preconceived models
-# ==================================================
 
 # PCA will show us what is actually found in our data. However we might
 # already have some a priori ideas of what might be interesting. If we
@@ -507,7 +475,7 @@ par(oPar)
 
 
 # ============================================================
-# t-SNE
+# =    5  t-SNE  ===============================================================
 # ============================================================
 # t-Stochastic Neighbour Embedding is a powerful dimension re-
 # duction algorithm developed in the lab of Geoff Hinton at UofT.
@@ -533,19 +501,19 @@ if (!require(tsne, quietly=TRUE)) {
 # Apply tsne to the crabs data
 # First: define a plotting function
 tsnePlot <- function(x) {
-    plotCrabs(x[,1], x[,2],
+    crabsPlot(x[,1], x[,2],
               crabs[ ,1], crabs[ ,2], pcaCrabs$x[ ,1],
               main = "Crabs TSNE")
 }
 
 # make the run reproducible
-set.seed(20)
+set.seed(208)
 
 # run tsne
 tsneCrabs <- tsne(crabs[,4:8],
                   epoch_callback = tsnePlot,
                   perplexity=70,
-                  max_iter = 5000)
+                  max_iter = 500)
 
 
 
@@ -580,7 +548,7 @@ set.seed(12345678)
 tsne_cho <- tsne(cho.data[,1:17],
                  epoch_callback = ecb,
                  perplexity = 50,
-                 max_iter = 2000)
+                 max_iter = 1000)
 
 # Pick a cluster of genes in the vicinity of the originally
 # selected values

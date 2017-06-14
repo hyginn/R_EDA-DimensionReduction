@@ -45,9 +45,9 @@
 # Module 3: Dimension Reduction
 #
 # ==============================================================================
- 
+
 #TOC> ==========================================================================
-#TOC> 
+#TOC>
 #TOC>   Section  Title                                              Line
 #TOC> ------------------------------------------------------------------
 #TOC>   1        PCA introduction                                     70
@@ -60,9 +60,9 @@
 #TOC>   3.3      Explore some similar genes                          329
 #TOC>   4        Exploring data relative to models                   386
 #TOC>   5        t-SNE                                               478
-#TOC> 
+#TOC>
 #TOC> ==========================================================================
- 
+
 
 
 
@@ -249,7 +249,7 @@ boxplot(cho.data)
 # in a cycle, we are less interested in the
 # absolute values of expression, and more in
 # whether values change in a cyclical fashion.
-# Therefor we scale all rows to mean 0 and
+# Therefore we scale all rows to mean 0 and
 # sd 1. Scale works on columns - to scale
 # rows we use t() to transpose ...
 x <- t(cho.data)
@@ -450,7 +450,9 @@ text(CorTwo[Sel1], CorHalf[Sel1], labels = Sel1, col="skyblue",   cex = 0.7)
 text(CorTwo[Sel2], CorHalf[Sel2], labels = Sel2, col="firebrick", cex = 0.7)
 text(CorTwo[Sel3], CorHalf[Sel3], labels = Sel3, col="seagreen",  cex = 0.7)
 
-
+listGenes(Sel1)
+listGenes(Sel2)
+listGenes(Sel3)
 
 
 oPar <- par(mfrow = c(3,1), mar=c(1,1,1,1)) # reduce margin sizes

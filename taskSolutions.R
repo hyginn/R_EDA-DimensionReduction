@@ -1,7 +1,7 @@
 # taskSolutions.R
 #
-# Code for (some of) the workshop tasks
-
+# Example code for (some of) the workshop tasks
+# ==========================================================================
 
 # Task: plot the last plot (without vectors) with plotting
 # symbols that correspond to the gender and type of crab:
@@ -27,38 +27,82 @@ points(pc$x[101:150,2], pc$x[101:150,3], pch=21, bg="orange", col="red")
 points(pc$x[151:200,2], pc$x[151:200,3], pch=24, bg="orange", col="red")
 
 
+
+
 # ==== systematic to standard gene name conversion ======
 #
-head(choGenes)
-# Goal: vector of 237 standard names
-#    use http://www.uniprot.org/docs/yeast.txt
-#    edit the file into csv format
-csvRaw <- read.csv("yeast.csv", header = FALSE, stringsAsFactors = FALSE)
+# found the information at SGD, using
+# http://yeastmine.yeastgenome.org/
+# made a tab-separated set of:
+# sytematc name / standard name / name
+# downloaded and edited to remove quotation marks for
+# missing fields
+geneInfo <- read.csv("yeastStandardGeneNames.tsv",
+                     sep = "\t",
+                     header = FALSE,
+                     stringsAsFactors = FALSE)
 
-"YAL040c"
-std <- csvRaw[csvRaw[ , "V2"] == toupper("YAL040c"), "V1"]
-strsplit(std, ";")[[1]][1]
+str(geneInfo)
+str(choGenes)
 
-test <- choGenes[sample(1:237, 5)]
+# PROBLEMS:
+# gene names are mixed-case in choGenes, all upper-case in geneInfo
+choGenes[1]
+geneInfo[1,1]
 
-choStandard <- character(length(choGenes))
-for (i in 1:length(choGenes)) {
-    syst <- choGenes[i]
-    std <- csvRaw[csvRaw[ , "V2"] == toupper(syst), "V1"]
-    if (length(std) == 1) {
-        choStandard[i] <- strsplit(std, ";")[[1]][1]
-    } else {
-        choStandard[i] <- toupper(syst)
+# There might be names that are duplicated ... (why ?)
+which(duplicated(choGenes))
+which(duplicated(geneInfo[ ,1]))
+
+# There might be names in choGenes that are not in geneInfo
+which(!(toupper(choGenes) %in% geneInfo[,1]))
+
+# ... R has a way to merge tables - see ?merge -
+# but(!) all of these issues might prevent automated procedures
+# to give false results (or not).
+
+# Doing this very safely ...
+# The output table we want:
+stdGenes <- data.frame(sys = toupper(choGenes),
+                       std = character(length(choGenes)),
+                       name = character(length(choGenes)),
+                       stringsAsFactors = FALSE)
+head(stdGenes)
+
+# Iterate over the gene names (in column 1)
+# and for each gene name fetch the additional information
+# from geneInfo
+for (i in 1:nrow(stdGenes)) {
+    sysID <- stdGenes$sys[i]
+
+    index <- grep(sysID, geneInfo[ , 1])
+    stdID <- geneInfo[index, 2]
+    if (length(stdID) == 0) {   # handle no-match
+        stdID <- sysID
+    }
+    myName <- geneInfo[index, 3]
+    if (length(myName) == 0) {   # handle no-match
+        myName <- "unknown"
+    }
+
+    # update fields in the dataframe
+    stdGenes$std[i] <- stdID
+    stdGenes$name[i] <- myName
+}
+
+# update listGenes()
+listGenes <- function(x) {
+    for (idx in x) {
+        cat(sprintf("%d:\t%s\t%s\t%s\n",
+                    idx,
+                    stdGenes$sys[idx],
+                    stdGenes$std[idx],
+                    stdGenes$name[idx] ))
     }
 }
 
-
-# shuffling data
-
-a <- letters[1:6]
-a
-sample(a)
+listGenes(c(1,2,3,5,8))
 
 
 
-
+# [END]
